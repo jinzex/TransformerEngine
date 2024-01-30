@@ -150,6 +150,7 @@ class _Linear(torch.autograd.Function):
                 weight_t_fp8 = None
             elif update_fp8_weights:
                 # Need to cast weights to FP8
+                weight_fp8_bak = weight_fp8
                 weight_fp8 = Float8Tensor(
                     data=weight_fp8._data,
                     fp8_meta=fp8_meta,
@@ -165,12 +166,15 @@ class _Linear(torch.autograd.Function):
                         transpose_out=weight_t_fp8._data,
                     )
                 else:
+                    # rewrite the following so print message is clear with names
+                    print(f"before data_ptr weight_fp8_bak: {weight_fp8_bak._data.data_ptr()}, weight_fp8: {weight_fp8._data.data_ptr()}")
                     weight_fp8._data = cast_to_fp8(
                         weight,
                         fp8_meta["scaling_fwd"],
                         tex.FP8FwdTensors.GEMM1_WEIGHT,
                         fp8_dtype_forward,
                     )
+                    print(f"after  data_ptr weight_fp8_bak: {weight_fp8_bak._data.data_ptr()}, weight_fp8: {weight_fp8._data.data_ptr()}")
                     weight_t_fp8 = None
 
             proj_out_index, meta_tensor, proj_out_tetype, proj_out_pttype = (
