@@ -799,6 +799,7 @@ class DotProductAttention(TransformerEngineBaseModule):
         inference_params: Optional[InferenceParams] = None,
         pad_between_seqs: Optional[bool] = None,
         fp8_output: Optional[bool] = False,
+        num_splits: Optional[int] = 1,
     ) -> torch.Tensor:
         """
         Dot Product Attention Layer.
@@ -973,6 +974,10 @@ class DotProductAttention(TransformerEngineBaseModule):
             If true, there are padding tokens between individual sequences in a packed batch.
         fp8_output: Optional[bool], default = `False`
             Whether to enforce output to be in FP8 or not.
+        num_splits: Optional[int], default = `1`
+            Number of splits for FlashAttention-3 forward kernel.
+            Setting to 1 ensures deterministic backward across TP ranks.
+            Only supported with FlashAttention-3 backend.
         """
 
         with torch.cuda.device(query_layer.device), self.prepare_forward(
@@ -1412,6 +1417,7 @@ class DotProductAttention(TransformerEngineBaseModule):
                     inference_params=inference_params,
                     flash_attention_backend=flash_attention_backend,
                     fp8_output=fp8_output,
+                    num_splits=num_splits,
                 )
 
             if use_fused_attention:
